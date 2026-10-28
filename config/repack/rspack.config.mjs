@@ -171,6 +171,10 @@ export default Repack.defineRspackConfig((env) => {
                     test: /\.(js)?bundle(\?.*)?$/i,
                     extractComments: false,
                     minimizerOptions: {
+                        // SWC's compressor reorders side effects. In reanimated's installTurboModule() it moves the
+                        // native call past the `delete`s of the globals that call reads, so reanimated never
+                        // initialises and release builds crash on first render. Mangling stays on.
+                        compress: false,
                         format: {comments: false},
                     },
                 }),
