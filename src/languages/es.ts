@@ -778,7 +778,7 @@ const translations: TranslationDeepObject<typeof en> = {
     hello: 'Hola',
     phoneCountryCode: '34',
     welcomeText: {
-        getStarted: 'Comience a continuación.',
+        getStarted: 'Introduce tu teléfono o correo electrónico para comenzar.',
         anotherLoginPageIsOpen: 'Otra página de inicio de sesión está abierta.',
         anotherLoginPageIsOpenExplanation: 'Ha abierto la página de inicio de sesión en una pestaña separada. Inicie sesión desde esa pestaña específica.',
         welcome: '¡Bienvenido!',
