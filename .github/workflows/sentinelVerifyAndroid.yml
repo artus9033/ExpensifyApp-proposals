@@ -39,10 +39,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      # Not the setupNode composite: it saves node_modules after this job's Gradle build, so the next run restores
+      # stale Gradle task history (installCMake "UP-TO-DATE" while the fresh runner has no CMake). npm ci is as fast.
       - name: Setup Node
-        uses: ./.github/actions/composite/setupNode
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
-          IS_HYBRID_BUILD: 'false'
+          node-version-file: '.nvmrc'
+
+      - name: Install node packages
+        run: npm ci
 
       # Gradle's patched-artifacts resolver calls `bun` from PATH; without it react-native is built from source.
       - name: Add node_modules binaries to PATH
