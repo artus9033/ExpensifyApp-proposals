@@ -34,6 +34,10 @@ jobs:
         with:
           IS_HYBRID_BUILD: 'false'
 
+      # Gradle's patched-artifacts resolver calls `bun` from PATH; without it react-native is built from source.
+      - name: Add node_modules binaries to PATH
+        run: echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
+
       - name: Configure MapBox SDK
         env:
           MAPBOX_SDK_DOWNLOAD_TOKEN: ${{ secrets.MAPBOX_SDK_DOWNLOAD_TOKEN }}
@@ -65,6 +69,10 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 \
             -storepass sentinel-verify -keypass sentinel-verify \
             -dname "CN=Sentinel Verify, O=Fork, C=US"
+
+      # The Group-IB SDK references SafetyNet, which the standalone app does not ship; only HybridApp builds go through R8 upstream.
+      - name: Ignore missing SafetyNet classes in R8
+        run: echo '-dontwarn com.google.android.gms.safetynet.**' >> android/app/proguard-rules.pro
 
       - name: Build adhocRelease APK
         working-directory: android
