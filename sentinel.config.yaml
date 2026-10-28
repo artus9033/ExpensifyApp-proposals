@@ -1,0 +1,14 @@
+version: 1.0
+issues: false
+user_settings:
+  reviewers: [alcpereira, artus9033]
+
+# /verify: install the APK built by .github/workflows/sentinelVerifyAndroid.yml for the PR's head commit.
+verify_target:
+  app:
+    bundle_id: com.expensify.chat.adhoc
+    platform: android
+    device: Pixel 9
+  build:
+    workflow: sentinelVerifyAndroid.yml
+    artifact: expensify-android-adhoc-apk

@@ -1,0 +1,92 @@
+# Fork-only: builds a self-contained standalone Android APK for Apex Sentinel's /verify.
+# Sentinel picks the newest successful pull_request run of this workflow for the PR's head SHA and installs the
+# artifact named in sentinel.config.yaml (verify_target.build.artifact) on an emulator.
+name: Sentinel Verify - Build Android
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore: ['docs/**', 'contributingGuides/**', 'help/**', 'tests/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    if: ${{ github.repository == 'artus9033/ExpensifyApp-proposals' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node
+        uses: ./.github/actions/composite/setupNode
+        with:
+          IS_HYBRID_BUILD: 'false'
+
+      - name: Configure MapBox SDK
+        env:
+          MAPBOX_SDK_DOWNLOAD_TOKEN: ${{ secrets.MAPBOX_SDK_DOWNLOAD_TOKEN }}
+        run: ./scripts/setup-mapbox-sdk.sh "$MAPBOX_SDK_DOWNLOAD_TOKEN"
+
+      - name: Create .env.adhoc file based on staging
+        run: |
+          cp .env.staging .env.adhoc
+          sed -i 's/ENVIRONMENT=staging/ENVIRONMENT=adhoc/' .env.adhoc
+
+      - name: Get Java version
+        id: get-java-version
+        uses: ./.github/actions/composite/getJavaVersion
+
+      - name: Setup Java
+        # v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
+        with:
+          distribution: adopt
+          java-version: ${{ steps.get-java-version.outputs.version }}
+          cache: gradle
+
+      # adhocRelease is signed with the release config; a throwaway keystore is enough for an emulator install.
+      - name: Generate throwaway signing keystore
+        run: |
+          keytool -genkeypair -v -noprompt \
+            -keystore android/app/my-upload-key.keystore \
+            -alias ReactNativeChat-Key-Alias \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass sentinel-verify -keypass sentinel-verify \
+            -dname "CN=Sentinel Verify, O=Fork, C=US"
+
+      - name: Build adhocRelease APK
+        working-directory: android
+        env:
+          ENVFILE: .env.adhoc
+          STANDALONE_NEW_DOT: 'true'
+          MYAPP_UPLOAD_STORE_PASSWORD: sentinel-verify
+          MYAPP_UPLOAD_KEY_PASSWORD: sentinel-verify
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./gradlew assembleAdhocRelease -PreactNativeArchitectures=arm64-v8a,x86_64 -x lint
+
+      - name: Collect APK
+        run: |
+          APK=$(find android/app/build/outputs/apk/adhoc/release -name '*.apk' -print -quit)
+          test -n "$APK"
+          cp "$APK" Expensify-adhoc.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: expensify-android-adhoc-apk
+          path: Expensify-adhoc.apk
+          if-no-files-found: error
+          retention-days: 14
