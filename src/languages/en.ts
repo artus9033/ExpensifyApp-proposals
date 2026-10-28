@@ -894,7 +894,7 @@ const translations = {
     hello: 'Hello',
     phoneCountryCode: '1',
     welcomeText: {
-        getStarted: 'Get started below.',
+        getStarted: 'Enter your phone or email to get started.',
         anotherLoginPageIsOpen: 'Another login page is open.',
         anotherLoginPageIsOpenExplanation: "You've opened the login page in a separate tab. Please log in from that tab.",
         welcome: 'Welcome!',
