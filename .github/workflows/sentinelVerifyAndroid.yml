@@ -48,6 +48,18 @@ jobs:
       - name: Add node_modules binaries to PATH
         run: echo "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
 
+      # facebook/hermes moved to meta/hermes, so its tarball's top folder is now `meta-hermes-<sha>` and react-native's
+      # unzipHermes (which only flattens `facebook-hermes-*`) leaves sdks/hermes without a CMakeLists.txt.
+      # hermesV1Enabled=true in android/gradle.properties, hence .hermesv1version.
+      - name: Download Hermes source
+        run: |
+          HERMES_TAG=$(cat node_modules/react-native/sdks/.hermesv1version)
+          HERMES_DIR="$RUNNER_TEMP/hermes"
+          mkdir -p "$HERMES_DIR"
+          curl -fsSL "https://github.com/meta/hermes/tarball/$HERMES_TAG" | tar -xz -C "$HERMES_DIR" --strip-components=1
+          test -f "$HERMES_DIR/CMakeLists.txt"
+          echo "REACT_NATIVE_OVERRIDE_HERMES_DIR=$HERMES_DIR" >> "$GITHUB_ENV"
+
       - name: Configure MapBox SDK
         env:
           MAPBOX_SDK_DOWNLOAD_TOKEN: ${{ secrets.MAPBOX_SDK_DOWNLOAD_TOKEN }}
