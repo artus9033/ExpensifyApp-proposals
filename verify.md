@@ -3,21 +3,14 @@
 ## The app
 - Standalone New Expensify for Android (`adhoc` flavor, package `com.expensify.chat.adhoc`, no
   Expensify Classic), talking to Expensify's staging servers, so it needs network. The first launch
-  can sit on the splash screen for a few seconds; wait for the sign-in screen instead of relaunching.
-- It opens signed out, on the sign-in screen. On a phone that screen shows, top to bottom: the
-  Expensify logo, a header ("Travel and expense, at the speed of chat"), a one-line subtitle, a
-  "Phone or email" field with a "Continue" button, and "Sign in with" Apple and Google buttons. There
-  is no "Welcome!" header on a phone; it only appears on wide screens.
-- Scrolling down the sign-in screen reaches a footer of links, and below them a language picker
-  (English / Español). Changing it switches the app's language at once, without signing in.
-
-## Driving it
-- The "Phone or email" field: target it with `id="username"`. `label="Phone or email"` matches two
-  elements and fails.
-- Evidence: quote the exact text of one element as `snapshot -i` (or a plain `snapshot`) prints it.
-  Quotes from `snapshot --raw` are not accepted. To show a text is gone, take a `snapshot -i` of the
-  screen and quote the text that replaced it.
-- Steps in a recording: `wait` needs a duration in ms, for example `wait 1500`.
+  can sit on the splash screen for a few seconds; wait for the app instead of relaunching it.
+- It opens signed out, on the sign-in screen. Without an account, only that screen is reachable:
+  scrolling down it shows a footer of links and a language picker (English / Español), which switches
+  the app's language at once, without signing in.
+- The app always uses its narrow (phone) layout on Android, whatever the screen size. Copy that only
+  appears on wide layouts is not shown here.
+- Labelled text inputs expose their label on more than one element, so a `label=` selector for a
+  field can match twice. Target the field by the `id` a snapshot shows for it.
 
 ## Limits
 - Do not sign in or create an account. Never submit a real-looking email address or phone number in
